@@ -2,39 +2,36 @@
 
 > 송금 처리 및 거래 내역 관리를 담당하는 마이크로서비스
 
+<details>
+  <summary><b>[ 📋 개요 ]</b> </summary>
+
 ## 📋 개요
 
-SSOK Transfer Service는 SSOK 플랫폼의 **송금 처리 및 거래 내역 관리 시스템**을 담당하는 핵심 서비스입니다. 일반 송금과 블루투스 기반 송금을 처리하며, OpenBanking API와 연동하여 실제 금융 거래를 수행하고, 거래 내역을 관리합니다.
+SSOK Transfer Service는 SSOK 플랫폼의 **송금 처리 및 거래 내역 관리 시스템**을 담당하는 핵심 서비스입니다. 일반 송금과 블루투스 기반 송금을 처리하며, OpenBanking API와 연동하여 금융 거래를 수행하고, 거래 내역을 관리합니다.
 
 ### 주요 기능
 
 - **송금 처리**: 일반 송금 및 블루투스 기반 근거리 송금
-- **거래 내역 관리**: 송금 이력 저장, 조회, 분석
+- **거래 내역 관리**: 송금 이력 저장, 계좌 별 송금 이력 조회, 최근 송금자 조회
 - **OpenBanking 연동**: 외부 금융기관과의 실시간 송금 처리
 - **비동기 알림**: Kafka를 통한 실시간 푸시 알림 발송
 - **gRPC 통신**: Account Service와의 고성능 계좌 정보 조회
 
-## 🏗️ 아키텍처
+<br/>
+</details>
 
-```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   Client Apps   │    │ Transfer Service │    │ External APIs   │
-│                 │    │                  │    │                 │
-│ • 일반 송금     │◄──►│ • 송금 처리      │◄──►│ • OpenBanking   │
-│ • 블루투스 송금 │    │ • 검증 로직      │    │ • 실시간 송금   │
-│ • 거래 내역     │    │ • 내역 관리      │    │                 │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
-                                │
-                                │ gRPC/REST
-                                ▼
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│     MySQL       │    │      Kafka       │    │ Other Services  │
-│                 │    │                  │    │                 │
-│ • 송금 이력     │    │ • 알림 메시지    │    │ • Account       │
-│ • 거래 내역     │    │ • 이벤트 발행    │    │ • User          │
-│ • 상대방 정보   │    │                  │    │ • Notification  │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
-```
+<details>
+  <summary><b>[ 🏗️ 아키텍처 ]</b> </summary>
+
+## 🏗️ 주요 아키텍처
+
+<img width="80%" src="https://github.com/user-attachments/assets/65538c71-e2c0-4c68-a533-07f71f731be0" alt="송금 서비스 아키텍처"/>
+
+<br/>
+</details>
+
+<details>
+  <summary><b>[ 🔧 기술 스택 ]</b> </summary>
 
 ## 🔧 기술 스택
 
@@ -48,7 +45,14 @@ SSOK Transfer Service는 SSOK 플랫폼의 **송금 처리 및 거래 내역 관
 | **External APIs** | OpenBanking API |
 | **Documentation** | OpenAPI 3.0 (Swagger) |
 | **Monitoring** | Micrometer, Actuator |
+| **Logging** | Slf4j, Logback |
 | **Build** | Gradle |
+
+<br/>
+</details>
+
+<details>
+  <summary><b>[ 📁 프로젝트 구조 ]</b> </summary>
 
 ## 📁 프로젝트 구조
 
@@ -121,6 +125,12 @@ ssok-transfer-service/
 └── Dockerfile                    # 컨테이너 이미지 빌드
 ```
 
+<br/>
+</details>
+
+<details>
+  <summary><b>[ 🗄️ 데이터베이스 스키마 ]</b> </summary>
+
 ## 🗄️ 데이터베이스 스키마
 
 ### TransferHistory 테이블
@@ -136,15 +146,10 @@ CREATE TABLE transfer_history (
     currency_code VARCHAR(10) NOT NULL,            -- 통화 코드 (KRW/USD)
     transfer_method VARCHAR(20) NOT NULL,          -- 송금 방법 (GENERAL/BLUETOOTH)
     created_at TIMESTAMP NOT NULL,                 -- 거래 시간
-    
-    INDEX idx_account_id (account_id),
-    INDEX idx_created_at (created_at),
-    INDEX idx_transfer_type (transfer_type),
-    INDEX idx_counterpart_account (counterpart_account)
 );
 ```
 
-### 지원하는 열거형
+### Enum
 
 ```java
 // 송금 유형
@@ -166,6 +171,12 @@ public enum CurrencyCode {
 }
 ```
 
+<br/>
+</details>
+
+<details>
+  <summary><b>[ 🔌 API 엔드포인트 ]</b> </summary>
+
 ## 🔌 API 엔드포인트
 
 ### 송금 처리 (`/api/transfers/openbank`)
@@ -183,6 +194,12 @@ public enum CurrencyCode {
 | GET | `/counterparts` | 최근 송금 상대 목록 | ✅ |
 | GET | `/history` | 최근 송금 이력 3건 | ✅ |
 
+<br/>
+</details>
+
+<details>
+  <summary><b>[ 💼 주요 비즈니스 로직 ]</b> </summary>
+
 ## 💼 주요 비즈니스 로직
 
 ### 일반 송금 처리 플로우
@@ -199,7 +216,7 @@ sequenceDiagram
     Transfer->>Transfer: 금액 검증
     Transfer->>Account: 출금 계좌번호 조회 (gRPC)
     Transfer->>Transfer: 동일 계좌 송금 검증
-    Transfer->>OpenBanking: 비동기 송금 요청 (WebClient)
+    Transfer->>OpenBanking: 송금 요청 (WebClient)
     OpenBanking-->>Transfer: 송금 결과
     Transfer->>Transfer: 출금 이력 저장
     Transfer->>Account: 입금 계좌 ID 조회 (gRPC)
@@ -213,46 +230,58 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant Client
+    participant Bluetooth
     participant Transfer
     participant Account
     participant OpenBanking
     participant Kafka
 
-    Client->>Transfer: 블루투스 송금 요청 (수신자 User ID)
+    Client->>Bluetooth: 블루투스 송금 요청 (수신자 Bluetooth UUID)
+    Bluetooth->>Bluetooth: Bluetooth UUID → 유저 ID 매핑 (Redis)
+    Bluetooth->>Transfer: 블루투스 송금 위임 (수신자 User ID)
     Transfer->>Transfer: 금액 검증
     Transfer->>Account: 수신자 주계좌 정보 조회 (gRPC)
     Transfer->>Account: 출금 계좌번호 조회 (gRPC)
     Transfer->>Transfer: 동일 계좌 송금 검증
-    Transfer->>OpenBanking: 비동기 송금 요청 (WebClient)
+    Transfer->>OpenBanking: 송금 요청 (WebClient)
     OpenBanking-->>Transfer: 송금 결과
     Transfer->>Transfer: 출금 이력 저장 (마스킹)
     Transfer->>Transfer: 입금 이력 저장 (마스킹)
     Transfer->>Kafka: 푸시 알림 발행
-    Transfer-->>Client: 블루투스 송금 결과 (마스킹)
+    Transfer-->>Bluetooth: 블루투스 송금 결과 (마스킹)
+    Bluetooth-->>Client: 블루투스 송금 결과
 ```
 
-### 송금 검증 로직
+<br/>
+</details>
 
-```java
-@Component
-public class TransferValidator {
-    // 송금 금액 검증
-    public void validateTransferAmount(Long amount) {
-        if (amount == null || amount <= 0) {
-            throw new TransferException(TransferResponseStatus.INVALID_TRANSFER_AMOUNT);
-        }
-    }
-    
-    // 동일 계좌 송금 방지
-    public void validateSameAccount(String sendAccount, String recvAccount) {
-        if (sendAccount.equals(recvAccount)) {
-            throw new TransferException(TransferResponseStatus.SAME_ACCOUNT_TRANSFER_NOT_ALLOWED);
-        }
-    }
-}
-```
+<details>
+  <summary><b>[ ⚡ 비동기 처리 및 성능 최적화 ]</b> </summary>
 
 ## ⚡ 비동기 처리 및 성능 최적화
+
+### WebClient 도입 배경
+
+기존 SSOK의 송금 로직은 `OpenFeign`을 사용한 **동기 방식**으로 구성되어 있었습니다. 이 방식은 구현이 간단하고 직관적이지만, 외부 오픈뱅킹 서버의 응답 지연이 곧바로 전체 송금 요청의 지연으로 이어지는 **고정적인 Latency** 문제를 초래했습니다.
+
+이는 트래픽이 크게 증가하면 전체 서비스의 응답성에 영향을 주는 병목 지점이 되었고, 사용자가 송금 결과를 빠르게 받아야 하는 모바일 환경에서 **UX 저하**로 이어졌습니다. 또한, Feign은 내부적으로 `Blocking I/O` 기반이기 때문에 호출 대기 중에도 **서버 스레드를 점유**하고 있어, 자원 효율 측면에서도 한계가 있었습니다.
+
+이는 트래픽이 크게 증가하면 
+특히 사용자 입장에서는 송금 요청 후 **즉시 결과 응답을 기대**하지만, 모든 처리(예: 알림 포함)가 완료될 때까지 대기해야 하는 구조는 **모바일 환경에서의 빠른 응답성 요구**에 적합하지 않았습니다.
+
+이러한 문제를 해결하기 위해 다음과 같은 이유로 **WebClient 기반 비동기 송금 처리**를 도입하게 되었습니다.
+
+- ✅ **Non-blocking I/O 기반의 네트워크 통신**
+  - 대기 시간이 발생해도 서버 스레드를 점유하지 않음
+- ✅ **AsyncExecutor와 함께 사용 시 고부하 환경에서도 병렬 처리 효율 확보**
+
+> WebClient는 논블로킹 I/O 기반이므로, 외부 서버의 응답을 기다리는 동안에도 스레드 리소스가 블로킹되지 않아 **서버 자원 효율성** 측면에서도 큰 장점을 제공한다고 판단했습니다.
+
+이러한 구조로 전환한 결과, JMeter를 활용한 부하 테스트(동시 100건 요청, 10분간 지속)에서 다음과 같은 성능 개선을 확인할 수 있었습니다.
+
+- 평균 응답 시간: 1172ms → **473ms**
+- 처리 속도(TPS): 45.6 → **66.6**
+
 
 ### 비동기 송금 처리
 
@@ -279,6 +308,27 @@ public CompletableFuture<TransferResponseDto> transfer(Long userId, TransferRequ
             
             return buildTransferResponse(dto);
         });
+}
+```
+
+### Async 설정
+
+```java
+@Configuration
+@EnableAsync
+public class AsyncConfig {
+    
+    @Bean(name = "customExecutorWebClient")
+    public TaskExecutor customExecutorWebClient() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(10);
+        executor.setMaxPoolSize(50);
+        executor.setQueueCapacity(100);
+        executor.setThreadNamePrefix("Transfer-Async-");
+        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+        executor.initialize();
+        return executor;
+    }
 }
 ```
 
@@ -327,7 +377,34 @@ public class TransferHistoryRepositoryImpl implements TransferHistoryRepositoryC
 }
 ```
 
+<br/>
+</details>
+
+<details>
+  <summary><b>[ 📡 Kafka 메시징 ]</b> </summary>
+
 ## 📡 Kafka 메시징
+
+### Kafka 도입 배경
+
+SSOK 시스템의 송금 과정에서 사용자가 즉각적인 송금 응답을 받기 위해서 송금 기능은 필수적인 동기 통신이지만, 알림 전송은 비동기적 처리가 가능합니다. 이전에는 송금 로직이 모두 동기로 구성되어 있어, 오픈뱅킹 요청 및 푸시 알림 요청이 순차적으로 처리되어 전체 Latency를 고정적으로 유발했습니다.
+
+이를 해결하기 위해 **Kafka 기반의 비동기 메시징 구조**를 도입하였습니다.
+
+* **송금 요청 → 오픈뱅킹 처리 → 송금 응답** 은 그대로 동기 처리
+* **푸시 알림 전송**은 Kafka Producer가 메시지를 발행하고, Notification 서비스가 Consumer로 메시지를 비동기 수신
+* 사용자에게는 **즉시 송금 결과 응답**이 전송되고, 알림은 나중에 도착해도 무관하므로 사용자 경험이 개선됨
+* Kafka 도입으로 시스템은 **더 높은 처리량과 확장성**, **서비스 간 결합도 감소**, **오류 발생 시 재처리 및 장애 격리 가능** 이점 확보
+
+> 🔧 참고: 아래 다이어그램은 송금 요청과 알림 전송을 Kafka로 분리하여 Latency를 줄이고, 각 서비스의 책임을 분리한 구조입니다.
+
+#### 기존 로직
+<img width="70%" src="https://github.com/user-attachments/assets/fa81b64f-c833-4efc-9a38-e5e513552f50" alt="기존 로직"/>
+
+#### 개선 로직
+<img width="70%" src="https://github.com/user-attachments/assets/ecbcccbe-1c6a-46c0-9655-2026c31a0088" alt="개선 로직"/>
+
+<br/>
 
 ### 알림 메시지 발행
 
@@ -361,77 +438,31 @@ public class KafkaNotificationMessageDto {
 }
 ```
 
-## 🔍 gRPC 서비스 통신
-
-### Account Service 연동
+### Kafka 설정
 
 ```java
-@Component
-public class AccountServiceClient implements AccountService {
+@Configuration
+public class KafkaProducerConfig {
     
-    // 계좌번호로 계좌 ID 조회
-    public AccountIdResponseDto getAccountId(String accountNumber) {
-        AccountNumberRequest request = AccountNumberRequest.newBuilder()
-            .setAccountNumber(accountNumber)
-            .build();
-        
-        AccountIdResponse response = 
-            accountServiceBlockingStub.getAccountIdByAccountNumber(request);
-        
-        return AccountIdResponseDto.builder()
-            .accountId(response.getAccountId())
-            .userId(response.getUserId())
-            .build();
-    }
-    
-    // 주계좌 정보 조회
-    public PrimaryAccountResponseDto getPrimaryAccountInfo(String userId) {
-        UserIdRequest request = UserIdRequest.newBuilder()
-            .setUserId(userId)
-            .build();
-        
-        PrimaryAccountInfoResponse response = 
-            accountServiceBlockingStub.getPrimaryAccountInfo(request);
-        
-        return PrimaryAccountResponseDto.builder()
-            .accountId(response.getAccountId())
-            .accountNumber(response.getAccountNumber())
-            .bankCode(response.getBankCode())
-            .username(response.getUsername())
-            .build();
+    @Bean
+    public ProducerFactory<String, String> producerFactory() {
+        Map<String, Object> props = new HashMap<>();
+        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers);
+        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        props.put(ProducerConfig.ACKS_CONFIG, "all");
+        props.put(ProducerConfig.RETRIES_CONFIG, 3);
+        props.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true);
+        return new DefaultKafkaProducerFactory<>(props);
     }
 }
 ```
 
-## 🛡️ 보안 및 프라이버시
+<br/>
+</details>
 
-### 민감정보 마스킹
-
-```java
-public class MaskingUtils {
-    // 계좌번호 마스킹 (뒤 4자리)
-    public static String maskAccountNumber(String accountNumber) {
-        if (accountNumber == null || accountNumber.length() < 4) {
-            return accountNumber;
-        }
-        return accountNumber.substring(0, accountNumber.length() - 4) + "****";
-    }
-    
-    // 사용자명 마스킹 (두 번째 글자)
-    public static String maskUsername(String username) {
-        if (username == null || username.length() < 2) {
-            return username;
-        }
-        return username.charAt(0) + "*" + username.substring(2);
-    }
-}
-```
-
-### 블루투스 송금 개인정보 보호
-
-- **계좌번호 마스킹**: 거래 이력에 마스킹된 계좌번호 저장
-- **이름 마스킹**: 거래 상대방 이름 일부 마스킹
-- **응답 마스킹**: 클라이언트 응답에도 마스킹 적용
+<details>
+  <summary><b>[ 🚀 빌드 및 실행 ]</b> </summary>
 
 ## 🚀 빌드 및 실행
 
@@ -453,32 +484,42 @@ public class MaskingUtils {
 
 3. **환경변수 설정**
    ```yaml
-   # application.yml (Kubernetes ConfigMap에서 주입)
-   spring:
-     datasource:
-       url: jdbc:mysql://localhost:3306/ssok_transfer
-       username: ${DB_USERNAME}
-       password: ${DB_PASSWORD}
-     kafka:
-       bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
-   
-   external:
-     openbanking-service:
-       base-url: ${OPENBANKING_BASE_URL}
-       api-key: ${OPENBANKING_API_KEY}
-     account-service:
-       url: ${ACCOUNT_SERVICE_URL}
-   
-   grpc:
-     client:
-       account-service:
-         address: ${ACCOUNT_SERVICE_GRPC_ADDRESS}
-   
-   kafka:
-     notification-topic: ${KAFKA_NOTIFICATION_TOPIC}
+    # application.yml
+    spring:
+      datasource:
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://localhost:3306/ssok-transfer?characterEncoding=UTF-8&serverTimeZone=Asia/Seoul
+        username: ${DB_USERNAME}
+        password: ${DB_PASSWORD}
+        hikari:
+          connection-timeout: 30000
+    
+      jpa:
+        hibernate:
+          ddl-auto: update
+        show-sql: true
+    
+    kafka:
+      bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+      notification-topic: ${KAFKA_NOTIFICATION_TOPIC}
+    
+    external:
+      openbanking-service:
+        base-url: ${OPENBANKING_BASE_URL}
+        api-key: ${OPENBANKING_API_KEY}
+    
+      account-service:
+        url: ${ACCOUNT_SERVICE_URL}
+      notification-service:
+        url: ${NOTIFICATION_SERVICE_URL}
+    
+    grpc:
+      client:
+        account-service:
+          address: ${ACCOUNT_SERVICE_GRPC_ADDRESS}
    ```
 
-4. **애플리케이션 실행**
+5. **애플리케이션 실행**
    ```bash
    java -jar build/libs/ssok-transfer-service-1.0-SNAPSHOT.jar
    ```
@@ -492,43 +533,28 @@ public class MaskingUtils {
 
 2. **컨테이너 실행**
    ```bash
-   docker run -p 8080:8080 \
-     -e DB_USERNAME=your_db_user \
-     -e DB_PASSWORD=your_db_password \
-     -e KAFKA_BOOTSTRAP_SERVERS=kafka:9092 \
-     -e OPENBANKING_API_KEY=your_api_key \
-     ssok-transfer-service:latest
+    docker run -p 8081:8081 \
+      -e DB_USERNAME=your_db_user \
+      -e DB_PASSWORD=your_db_password \
+      -e KAFKA_BOOTSTRAP_SERVERS=localhost:9092 \
+      -e KAFKA_NOTIFICATION_TOPIC=ssok.notification.topic \
+      -e OPENBANKING_BASE_URL=http://localhost:8000 \
+      -e OPENBANKING_API_KEY=your_api_key \
+      -e ACCOUNT_SERVICE_URL=http://localhost:8091 \
+      -e NOTIFICATION_SERVICE_URL=http://localhost:8084 \
+      -e ACCOUNT_SERVICE_GRPC_ADDRESS=static://localhost:6565 \
+      ssok-transfer-service:latest
    ```
 
-## 📊 모니터링 및 로깅
+<br/>
+</details>
 
-### 헬스체크
-```
-GET /actuator/health
-```
-
-### 메트릭 수집
-```
-GET /actuator/prometheus
-```
-
-### 성능 로그 구조
-```
-[TPS-PROFILE] 전체=245ms | 검증=5ms | 계좌조회=15ms | 동일계좌검증=2ms | 
-오픈뱅킹호출(전)=8ms | 오픈뱅킹호출(소요)=180ms | 출금저장=20ms | 입금저장+알림=15ms
-```
-
-### 커스텀 메트릭
-- `transfer.requests.total`: 총 송금 요청 수
-- `transfer.success.total`: 송금 성공 건수
-- `transfer.failure.total`: 송금 실패 건수
-- `transfer.duration`: 송금 처리 시간
-- `transfer.amount.total`: 총 송금 금액
-- `openbanking.api.duration`: OpenBanking API 응답 시간
+<details>
+  <summary><b>[ 🧪 테스트 ]</b> </summary>
 
 ## 🧪 테스트
 
-### 단위 테스트 실행
+### 테스트 실행
 ```bash
 ./gradlew test
 ```
@@ -555,7 +581,7 @@ curl -X POST http://localhost:8080/api/transfers/openbank \
     "amount": 10000
   }'
 
-# 블루투스 송금 테스트
+# 블루투스 송금 테스트(bluetooth-service에서 요청하는 API)
 curl -X POST http://localhost:8080/api/transfers/openbank/bluetooth \
   -H "Authorization: Bearer <token>" \
   -H "X-User-Id: 123" \
@@ -569,357 +595,15 @@ curl -X POST http://localhost:8080/api/transfers/openbank/bluetooth \
   }'
 ```
 
-## 🚨 예외 처리
+<br/>
+</details>
 
-### 주요 예외 상황
-- **송금 금액 오류**: 0원 이하 송금 시도
-- **동일 계좌 송금**: 출금/입금 계좌가 동일한 경우
-- **계좌 조회 실패**: 존재하지 않는 계좌
-- **잔액 부족**: 출금 가능 금액 초과
-- **OpenBanking API 오류**: 외부 API 호출 실패
-- **네트워크 타임아웃**: 외부 서비스 응답 지연
+<br/>
 
-### 응답 형식
-```json
-{
-  "isSuccess": false,
-  "code": 4304,
-  "message": "송금 금액은 0보다 커야 합니다.",
-  "result": null
-}
-```
-
-### OpenBanking 오류 매핑
-```java
-// OpenBanking API 오류 코드를 내부 예외로 매핑
-switch (openBankingErrorCode) {
-    case "ACCOUNT_NOT_FOUND":
-        return TransferResponseStatus.ACCOUNT_NOT_FOUND;
-    case "INSUFFICIENT_BALANCE":
-        return TransferResponseStatus.INSUFFICIENT_BALANCE;
-    case "TRANSFER_LIMIT_EXCEEDED":
-        return TransferResponseStatus.TRANSFER_LIMIT_EXCEEDED;
-    default:
-        return TransferResponseStatus.TRANSFER_UNKNOWN_ERROR;
-}
-```
-
-## 📋 TODO / 개선사항
-
-- [ ] **거래 제한**: 일일/월간 송금 한도 설정
-- [ ] **사기 방지**: 의심 거래 탐지 알고리즘
-- [ ] **거래 취소**: 송금 취소 및 환불 기능
-- [ ] **수수료 계산**: 송금 수수료 자동 계산
-- [ ] **통계 대시보드**: 송금 패턴 분석 및 시각화
-- [ ] **예약 송금**: 지정 시간 송금 기능
-- [ ] **반복 송금**: 정기 송금 스케줄링
-- [ ] **Multi-Currency**: 해외 송금 지원
-- [ ] **Batch Processing**: 대량 송금 일괄 처리
-- [ ] **Real-time Dashboard**: 실시간 송금 현황 모니터링
-
-## 🔄 트랜잭션 관리
-
-### 분산 트랜잭션
-
-송금 처리는 여러 시스템에 걸친 분산 트랜잭션입니다:
-
-1. **로컬 트랜잭션**: Transfer Service 내 거래 이력 저장
-2. **외부 API 호출**: OpenBanking API 송금 요청
-3. **이벤트 발행**: Kafka 알림 메시지 발송
-
-### Saga 패턴 적용
-
-```java
-@Service
-public class TransferSagaOrchestrator {
-    
-    public CompletableFuture<TransferResponseDto> executeTransfer(TransferRequestDto request) {
-        return CompletableFuture
-            .supplyAsync(() -> validateTransfer(request))      // 1. 검증
-            .thenCompose(this::callOpenBanking)                // 2. 외부 API 호출
-            .thenCompose(this::saveTransferHistory)            // 3. 이력 저장
-            .thenCompose(this::sendNotification)               // 4. 알림 발송
-            .exceptionally(this::handleFailure);              // 보상 트랜잭션
-    }
-    
-    private CompletableFuture<Void> handleFailure(Throwable ex) {
-        // 실패 시 보상 로직 (rollback, 알림 등)
-        log.error("송금 처리 실패: {}", ex.getMessage());
-        return compensationService.rollback();
-    }
-}
-```
-
-## 🔧 설정 관리
-
-### Async 설정
-
-```java
-@Configuration
-@EnableAsync
-public class AsyncConfig {
-    
-    @Bean(name = "customExecutorWebClient")
-    public TaskExecutor customExecutorWebClient() {
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(10);
-        executor.setMaxPoolSize(50);
-        executor.setQueueCapacity(100);
-        executor.setThreadNamePrefix("Transfer-Async-");
-        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
-        executor.initialize();
-        return executor;
-    }
-}
-```
-
-### Kafka 설정
-
-```java
-@Configuration
-public class KafkaProducerConfig {
-    
-    @Bean
-    public ProducerFactory<String, String> producerFactory() {
-        Map<String, Object> props = new HashMap<>();
-        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers);
-        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        props.put(ProducerConfig.ACKS_CONFIG, "all");
-        props.put(ProducerConfig.RETRIES_CONFIG, 3);
-        props.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true);
-        return new DefaultKafkaProducerFactory<>(props);
-    }
-}
-```
-
-## 📈 성능 튜닝
-
-### 데이터베이스 최적화
-
-```sql
--- 인덱스 최적화
-CREATE INDEX idx_transfer_history_composite 
-ON transfer_history (account_id, transfer_type, created_at DESC);
-
--- 파티셔닝 (월별)
-ALTER TABLE transfer_history 
-PARTITION BY RANGE (YEAR(created_at) * 100 + MONTH(created_at)) (
-    PARTITION p202401 VALUES LESS THAN (202402),
-    PARTITION p202402 VALUES LESS THAN (202403),
-    -- ...
-);
-```
-
-### 캐싱 전략
-
-```java
-@Service
-public class TransferHistoryService {
-    
-    @Cacheable(value = "transferCounterparts", key = "#userId")
-    public List<TransferCounterpartResponseDto> getRecentCounterparts(Long userId) {
-        List<Long> accountIds = accountServiceClient.getAccountIdsByUserId(userId.toString());
-        return transferHistoryRepository.findRecentCounterparts(accountIds);
-    }
-    
-    @CacheEvict(value = "transferCounterparts", key = "#userId")
-    public void invalidateCounterpartsCache(Long userId) {
-        // 송금 완료 시 캐시 무효화
-    }
-}
-```
-
-## 🔐 보안 강화
-
-### API Rate Limiting
-
-```java
-@Component
-public class TransferRateLimiter {
-    
-    private final RedisTemplate<String, String> redisTemplate;
-    
-    public boolean isAllowed(Long userId, TransferMethod method) {
-        String key = String.format("transfer:rate:%d:%s", userId, method);
-        String count = redisTemplate.opsForValue().get(key);
-        
-        if (count == null) {
-            redisTemplate.opsForValue().set(key, "1", Duration.ofMinutes(1));
-            return true;
-        }
-        
-        int currentCount = Integer.parseInt(count);
-        if (currentCount >= getMaxTransfersPerMinute(method)) {
-            return false;
-        }
-        
-        redisTemplate.opsForValue().increment(key);
-        return true;
-    }
-}
-```
-
-### 거래 패턴 분석
-
-```java
-@Component
-public class FraudDetectionService {
-    
-    public boolean isSuspiciousTransaction(TransferRequestDto request, Long userId) {
-        // 1. 금액 패턴 분석
-        if (isUnusualAmount(request.getAmount(), userId)) {
-            return true;
-        }
-        
-        // 2. 시간 패턴 분석
-        if (isUnusualTime(LocalDateTime.now(), userId)) {
-            return true;
-        }
-        
-        // 3. 빈도 분석
-        if (isHighFrequency(userId)) {
-            return true;
-        }
-        
-        return false;
-    }
-}
-```
-
-## 🧪 통합 테스트
-
-### TestContainers 활용
-
-```java
-@SpringBootTest
-@TestPropertySource(properties = {
-    "spring.datasource.url=jdbc:tc:mysql:8.0:///testdb",
-    "spring.kafka.bootstrap-servers=${embedded.kafka.brokers}"
-})
-class TransferServiceIntegrationTest {
-    
-    @Container
-    static MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0")
-            .withDatabaseName("testdb")
-            .withUsername("test")
-            .withPassword("test");
-    
-    @Container
-    static KafkaContainer kafka = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:latest"));
-    
-    @Test
-    void 일반송금_성공_테스트() {
-        // Given
-        TransferRequestDto request = createTransferRequest();
-        
-        // When
-        CompletableFuture<TransferResponseDto> result = transferService.transfer(1L, request, TransferMethod.GENERAL);
-        
-        // Then
-        assertThat(result.join().getAmount()).isEqualTo(10000L);
-    }
-}
-```
-
-### Mock 서버 테스트
-
-```java
-@ExtendWith(MockitoExtension.class)
-class OpenBankingClientTest {
-    
-    @Mock
-    private WebClient webClient;
-    
-    @Test
-    void OpenBanking_송금요청_성공() {
-        // Given
-        OpenBankingTransferRequestDto request = createOpenBankingRequest();
-        OpenBankingResponse mockResponse = createSuccessResponse();
-        
-        when(webClient.post().uri(any()).bodyValue(any()).retrieve().bodyToMono(any()))
-            .thenReturn(Mono.just(mockResponse));
-        
-        // When
-        CompletableFuture<OpenBankingResponse> result = openBankingClient.sendTransferRequestAsync(request);
-        
-        // Then
-        assertThat(result.join().isSuccess()).isTrue();
-    }
-}
-```
-
-## 🔍 디버깅 및 문제해결
-
-### 송금 실패 분석
-
-```bash
-# 송금 실패 로그 검색
-grep "송금 실패" /var/log/ssok-transfer-service.log | tail -20
-
-# 특정 사용자 송금 이력
-grep "userId:123" /var/log/ssok-transfer-service.log | grep "TRANSFER"
-
-# OpenBanking API 응답 시간 분석
-grep "오픈뱅킹호출(소요)" /var/log/ssok-transfer-service.log | awk '{print $5}' | sort -n
-```
-
-### 성능 이슈 진단
-
-```sql
--- 느린 쿼리 분석
-SELECT * FROM performance_schema.events_statements_summary_by_digest 
-WHERE DIGEST_TEXT LIKE '%transfer_history%' 
-ORDER BY AVG_TIMER_WAIT DESC LIMIT 10;
-
--- 최근 송금 현황
-SELECT 
-    DATE(created_at) as date,
-    transfer_method,
-    COUNT(*) as count,
-    SUM(transfer_money) as total_amount
-FROM transfer_history 
-WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
-GROUP BY DATE(created_at), transfer_method
-ORDER BY date DESC;
-```
-
-## 🤝 기여 가이드
-
-1. **Feature 브랜치 생성**
-   ```bash
-   git checkout -b feature/new-transfer-feature
-   ```
-
-2. **코드 작성 및 테스트**
-   - 단위 테스트 작성 필수
-   - 통합 테스트 추가 권장
-   - OpenBanking API Mock 테스트
-
-3. **성능 테스트**
-   - 동시 송금 요청 처리 확인
-   - 메모리 사용량 모니터링
-   - 응답 시간 측정
-
-4. **Pull Request 생성**
-   - 변경사항 상세 설명
-   - 테스트 결과 첨부
-   - 성능 영향도 분석
-
-5. **코드 리뷰 및 머지**
-   - 보안 검토 필수
-   - 성능 영향도 검토
-   - 장애 시나리오 검토
-
-## 📞 문의
+#### 📞 문의
 
 Transfer Service 관련 문의사항이 있으시면 이슈를 등록해주세요.
 
-### 긴급 문의 (운영 중 장애)
-- **송금 실패**: OpenBanking API 상태 확인 필요
-- **성능 저하**: 데이터베이스 연결 상태 및 쿼리 성능 확인
-- **알림 지연**: Kafka 클러스터 상태 확인
-
 ---
 
-> **Note**: 이 서비스는 실제 금융 거래를 처리하는 핵심 서비스입니다. 모든 변경사항은 충분한 테스트를 거친 후 적용해야 하며, 장애 발생 시 즉시 대응할 수 있는 모니터링 체계를 갖추고 있습니다. 다른 서비스들과의 연동 정보는 [메인 README](../README.md)를 참조하세요.
+> **Note**: 이 서비스는 금융 거래를 처리하는 핵심 서비스입니다. 모든 변경사항은 충분한 테스트를 거친 후 적용해야 하며, 장애 발생 시 즉시 대응할 수 있는 모니터링 체계를 갖추고 있습니다. 다른 서비스들과의 연동 정보는 [메인 README](../README.md)를 참조하세요.
