@@ -275,6 +275,10 @@ sequenceDiagram
   - 대기 시간이 발생해도 서버 스레드를 점유하지 않음
 - ✅ **AsyncExecutor와 함께 사용 시 고부하 환경에서도 병렬 처리 효율 확보**
 
+또한, transferService.transfer(...)는 @Async이지만, CompletableFuture 체인이 .thenApply(...)가 완료될 때까지 기다려서 응답을 생성하므로 사용자는 모든 송금 요청에 대한 처리가 끝나고 응답을 받게 됩니다.
+
+즉, 송금에 대한 즉각 응답을 받기 위해 사용자 경험 측면에서 완전한 논블로킹으로 구성하지 않고 클라이언트에게는 **송금 처리 완료 후 응답을 받는 동기 스타일 응답**처럼 동작하도록 했습니다.
+
 > WebClient는 논블로킹 I/O 기반이므로, 외부 서버의 응답을 기다리는 동안에도 스레드 리소스가 블로킹되지 않아 **서버 자원 효율성** 측면에서도 큰 장점을 제공한다고 판단했습니다.
 
 이러한 구조로 전환한 결과, JMeter를 활용한 부하 테스트(동시 100건 요청, 10분간 지속)에서 다음과 같은 성능 개선을 확인할 수 있었습니다.
@@ -282,34 +286,106 @@ sequenceDiagram
 - 평균 응답 시간: 1172ms → **473ms**
 - 처리 속도(TPS): 45.6 → **66.6**
 
+<br/>
 
-### 비동기 송금 처리
+### WebClient 기반 송금 처리 시퀀스
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Controller as TransferController
+    participant Executor as AsyncExecutor
+    participant WebClient as openBankingWebClient
+    participant Connector as ReactorClientHttpConnector
+    participant HttpClient
+    participant ConnectionPool as ConnectionProvider
+    participant OpenBanking as OpenBanking Server
+
+    Client->>Controller: 1. 송금 API 호출
+    Controller->>Executor: 2. 비동기 스레드로 작업 위임
+    Executor->>WebClient: 3. WebClient에 HTTP 요청 구성 및 전송
+    WebClient->>Connector: 4. Reactor 커넥터로 요청 전달
+    Connector->>HttpClient: 5. Netty HttpClient에 전송 지시
+    HttpClient->>ConnectionPool: 6. 커넥션 풀에서 소켓 연결 획득 요청
+    ConnectionPool-->>HttpClient: 7. 소켓 연결 객체 반환
+    HttpClient->>OpenBanking: 8. 오픈뱅킹 서버에 실제 HTTP 요청
+    OpenBanking-->>HttpClient: 9. 서버로부터 응답 수신
+    HttpClient-->>Connector: 10. 응답 바이트를 커넥터로 전달
+    Connector-->>WebClient: 11. Mono로 래핑해 WebClient로 반환
+    WebClient-->>Executor: 12. CompletableFuture로 변환해 반환
+    Executor-->>Controller: 13. 비동기 작업 결과 DTO 전달
+    Controller-->>Client: 14. 클라이언트에 최종 응답 전송
+```
+
+<br/>
+
+
+### WebClient 기반 송금 처리
 
 ```java
 @Async("customExecutorWebClient")
 @Transactional
 public CompletableFuture<TransferResponseDto> transfer(Long userId, TransferRequestDto dto, TransferMethod transferMethod) {
-    // 1. 검증 및 계좌 정보 조회 (동기)
+    // 1. 송금 금액 검증
     validator.validateTransferAmount(dto.getAmount());
+
+    // 2. 출금 계좌번호 조회
     String sendAccountNumber = accountResolver.findSendAccountNumber(dto.getSendAccountId(), userId);
-    
-    // 2. OpenBanking 비동기 호출
+
+    // 3. 오픈뱅킹 송금 요청 DTO 생성
+    OpenBankingTransferRequestDto obReq = OpenBankingTransferRequestDto.builder()
+            .sendAccountNumber(sendAccountNumber)
+            .sendBankCode(dto.getSendBankCode())
+            .sendName(dto.getSendName())
+            .recvAccountNumber(dto.getRecvAccountNumber())
+            .recvBankCode(dto.getRecvBankCode())
+            .recvName(dto.getRecvName())
+            .amount(dto.getAmount())
+            .build();
+
+    // 4. WebClient 비동기 호출 및 후속 처리
     return openBankingWebClient
-        .sendTransferRequestAsync(obReq)
-        .thenApply(response -> {
-            // 3. 응답 처리 및 이력 저장
-            if (!response.isSuccess()) {
-                throw new TransferException(TransferResponseStatus.REMITTANCE_FAILED);
-            }
-            
-            // 4. 거래 이력 저장 및 알림 발송
-            transferHistoryRecorder.saveTransferHistory(/* ... */);
-            saveDepositHistoryIfReceiverExists(sendAccountNumber, dto, transferMethod);
-            
-            return buildTransferResponse(dto);
-        });
+            .sendTransferRequestAsync(obReq)
+            .thenApply(response -> {
+                if (!response.isSuccess()) {
+                    log.error("오픈뱅킹 송금 실패: {}", response.getMessage());
+                    throw new TransferException(TransferResponseStatus.REMITTANCE_FAILED);
+                }
+
+                // 5. 이력 저장 및 알림
+                transferHistoryRecorder.saveTransferHistory(
+                        dto.getSendAccountId(), dto.getRecvAccountNumber(), dto.getRecvName(),
+                        BankCode.fromIdx(dto.getRecvBankCode()), TransferType.WITHDRAWAL,
+                        dto.getAmount(), CurrencyCode.KRW, transferMethod
+                );
+
+                saveDepositHistoryIfReceiverExists(sendAccountNumber, dto, transferMethod);
+
+                return TransferResponseDto.builder()
+                        .sendAccountId(dto.getSendAccountId())
+                        .recvAccountNumber(dto.getRecvAccountNumber())
+                        .amount(dto.getAmount())
+                        .build();
+            });
 }
 ```
+
+### WebClient 비동기 송금 요청
+
+```java
+@Override
+public CompletableFuture<OpenBankingResponse> sendTransferRequestAsync(OpenBankingTransferRequestDto requestDto) {
+    return openBankingWebClient
+            .post()
+            .uri("/api/openbank/transfers")
+            .header("X-API-KEY", apiKey)
+            .bodyValue(requestDto)
+            .retrieve()
+            .bodyToMono(OpenBankingResponse.class)
+            .toFuture();
+}
+```
+
 
 ### Async 설정
 
@@ -317,14 +393,22 @@ public CompletableFuture<TransferResponseDto> transfer(Long userId, TransferRequ
 @Configuration
 @EnableAsync
 public class AsyncConfig {
-    
+
+    @Value("${executor.corePoolSizeMultiplier:2}")
+    private int coreMul;
+
+    @Value("${executor.maxPoolSizeMultiplier:4}")
+    private int maxMul;
+
     @Bean(name = "customExecutorWebClient")
     public TaskExecutor customExecutorWebClient() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(10);
-        executor.setMaxPoolSize(50);
-        executor.setQueueCapacity(100);
-        executor.setThreadNamePrefix("Transfer-Async-");
+        int cores = Runtime.getRuntime().availableProcessors();
+        executor.setCorePoolSize(cores * coreMul);
+        executor.setMaxPoolSize(cores * maxMul);
+        executor.setQueueCapacity(1000);
+        executor.setKeepAliveSeconds(60);
+        executor.setThreadNamePrefix("TransferAsync-");
         executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
         executor.initialize();
         return executor;
@@ -337,42 +421,30 @@ public class AsyncConfig {
 ```java
 @Configuration
 public class WebClientConfig {
+
+    @Value("${external.openbanking-service.url}")
+    private String baseUrl;
+
     @Bean
     public WebClient openBankingWebClient() {
+        ConnectionProvider provider = ConnectionProvider.builder("openbanking-pool")
+                .maxConnections(1000)
+                .pendingAcquireMaxCount(-1)
+                .pendingAcquireTimeout(Duration.ofSeconds(5))
+                .build();
+
+        HttpClient httpClient = HttpClient.create(provider)
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 3000)
+                .doOnConnected(conn -> conn
+                        .addHandlerLast(new ReadTimeoutHandler(3))
+                        .addHandlerLast(new WriteTimeoutHandler(3)))
+                .responseTimeout(Duration.ofSeconds(3));
+
         return WebClient.builder()
-            .baseUrl("${external.openbanking-service.base-url}")
-            .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-            .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(1 * 1024 * 1024))
-            .build();
-    }
-}
-```
-
-### QueryDSL 복잡 쿼리
-
-```java
-@Repository
-public class TransferHistoryRepositoryImpl implements TransferHistoryRepositoryCustom {
-    
-    public List<TransferCounterpartResponseDto> findRecentCounterparts(List<Long> accountIds) {
-        return queryFactory
-            .select(Projections.constructor(
-                TransferCounterpartResponseDto.class,
-                history.counterpartName,
-                history.counterpartAccount,
-                history.counterpartBankCode,
-                history.createdAt.max()
-            ))
-            .from(history)
-            .where(
-                history.accountId.in(accountIds),
-                history.transferType.eq(TransferType.WITHDRAWAL),
-                history.transferMethod.eq(TransferMethod.GENERAL)
-            )
-            .groupBy(history.counterpartAccount, history.counterpartName, history.counterpartBankCode)
-            .orderBy(history.createdAt.max().desc())
-            .limit(50)
-            .fetch();
+                .baseUrl(baseUrl)
+                .clientConnector(new ReactorClientHttpConnector(httpClient))
+                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .build();
     }
 }
 ```
