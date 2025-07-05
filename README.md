@@ -115,6 +115,8 @@ SSOK은 **마이크로서비스 아키텍처**로 설계되어 각 도메인별�
 
 ## 🛠️ 기술 스택
 
+<img width="100%" src="https://github.com/user-attachments/assets/29fb48cb-36f0-4074-aaf5-f2c5275c44c5" alt="기술 스택"/>
+
 ### Backend Framework
 - **Spring Boot 3.4.4**: 마이크로서비스 프레임워크
 - **Spring Cloud 2024.0.0**: 마이크로서비스 인프라
