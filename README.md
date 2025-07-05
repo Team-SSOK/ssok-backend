@@ -10,6 +10,9 @@
 
 <br>
 
+<details>
+  <summary><b>[ 📋 개요 ]</b> </summary>
+
 ## 📋 개요
 
 > 블루투스 기반 송금 기능을 제공하는 금융 서비스 **SSOK**의 백엔드 저장소입니다.
@@ -24,52 +27,27 @@
 - **오픈뱅킹 연동**: 외부 금융기관([OpenBanking](https://github.com/Team-SSOK/ssok-openbanking))과의 실시간 API 연동
 - **통합 계좌 관리**: 다중 은행 계좌 통합 관리
 
-### 🏗️ 아키텍처
+<br/>
+</details>
+
+<details>
+  <summary><b>[ 🏗️ 아키텍처 ]</b> </summary>
+
+## 🏗️ 아키텍처
 
 SSOK은 **마이크로서비스 아키텍처**로 설계되어 각 도메인별로 독립적인 서비스로 구성되어 있습니다.
 
-```mermaid
-graph TB
-    subgraph "Client Layer"
-        C1[Mobile App]
-        C2[Web App]
-    end
-    
-    subgraph "API Gateway"
-        GW[ssok-gateway-service<br/>Spring Cloud Gateway]
-    end
-    
-    subgraph "Microservices"
-        US[ssok-user-service<br/>사용자 관리]
-        AS[ssok-account-service<br/>계좌 관리]
-        TS[ssok-transfer-service<br/>송금 처리]
-        BS[ssok-bluetooth-service<br/>블루투스 매칭]
-        NS[ssok-notification-service<br/>알림 발송]
-    end
-    
-    subgraph "Infrastructure"
-        Redis[(Redis<br/>캐시 & 세션)]
-        DB[(PostgreSQL<br/>데이터베이스)]
-        Kafka[Apache Kafka<br/>메시징]
-        External[OpenBanking API<br/>외부 금융기관]
-    end
-    
-    C1 --> GW
-    C2 --> GW
-    GW --> US
-    GW --> AS
-    GW --> TS
-    GW --> BS
-    
-    US --> DB
-    AS --> DB
-    TS --> DB
-    BS --> Redis
-    NS --> Kafka
-    
-    TS --> External
-    NS --> External
-```
+### 서비스 아키텍처
+<img width="100%" src="https://github.com/user-attachments/assets/349de2c2-422c-4431-be01-b5dc49813d03" alt="서비스 아키텍처"/>
+
+### 인프라 아키텍처
+<img width="100%" src="https://github.com/user-attachments/assets/64e51bbb-2fb8-40b5-aba1-128a801dd1e5" alt="인프라 아키텍처"/>
+
+<br/>
+</details>
+
+<details>
+  <summary><b>[ 🛠️ 기술 스택 ]</b> </summary>
 
 ## 🛠️ 기술 스택
 
@@ -97,7 +75,23 @@ graph TB
 - **Micrometer + Prometheus**: 메트릭 수집
 - **Actuator**: 헬스 체크 및 모니터링
 
-## 📂 프로젝트 구조
+### Logging
+
+* **Slf4j + Logback**: 애플리케이션 로그 설정 및 레벨 제어
+* **Fluent Bit**: 각 서비스의 로그를 수집하여 Fluentd로 전달
+* **Fluentd → OpenSearch**: 집계된 로그를 OpenSearch에 저장
+* **OpenSearch Dashboards**: 로그 시각화 및 분석
+* **이상 탐지 및 알림**: 에러 및 이상 로그 발생 시 SSOM 및 Slack으로 실시간 알림 전송
+
+<br/>
+</details>
+
+<details>
+  <summary><b>[ 🔗 프로젝트 구조 & 서비스별 상세 문서 ]</b> </summary>
+
+## 🔗 프로젝트 구조 & 서비스별 상세 문서
+
+### 📂 프로젝트 구조
 
 ```
 ssok-backend/
@@ -112,10 +106,11 @@ ssok-backend/
 ├── Jenkinsfile                    # CI/CD 파이프라인
 └── gradle/                        # Gradle 빌드 설정
 ```
+> 각 마이크로서비스의 상세 프로젝트 구조는 아래의 개별 README 문서를 참고해주세요.
 
-## 🔗 서비스별 상세 문서
+---
 
-각 마이크로서비스의 상세한 API 명세, 설정 방법, 실행 가이드는 개별 README 문서를 참고하세요.
+각 마이크로서비스의 상세한 명세, 설정 방법, 실행 가이드는 개별 README 문서를 참고하세요.
 
 ### 📊 Core Services
 | 서비스 | 설명 | 문서 링크 |
@@ -135,6 +130,157 @@ ssok-backend/
 | 모듈 | 설명 | 문서 링크 |
 |------|------|-----------|
 | **Common** | 공통 예외, 응답, 유틸리티, gRPC Proto | [📖 상세 문서](./ssok-common/ssok_common_readme.md) |
+
+<br/>
+</details>
+
+<details>
+  <summary><b>[ 🔀 Git Flow & 협업 가이드라인 ]</b> </summary>
+
+## 🔀 Git Flow & 협업 가이드라인
+
+SSOK 프로젝트는 **Git Flow 전략**을 기반으로 브랜치를 관리하며, 일관된 커밋 컨벤션과 PR 리뷰를 통해 협업 효율을 높입니다.
+
+### 🧵 브랜치 전략
+
+모든 브랜치는 `develop` 브랜치에서 파생되며, 기능 및 목적에 따라 다음과 같은 네이밍 규칙을 따릅니다:
+
+| 브랜치               | 설명                 |
+| ----------------- | ------------------ |
+| `main`            | 제품으로 출시되는 운영 브랜치   |
+| `develop`         | 통합 개발 브랜치 (기본 브랜치) |
+| `feat/{이슈번호}/{JIRA 이슈 키}`     | 새로운 기능 개발 브랜치      |
+| `fix/{이슈번호}/{JIRA 이슈 키}`      | 버그 수정 브랜치          |
+| `refactor/{이슈번호}/{JIRA 이슈 키}` | 코드 리팩토링 브랜치        |
+| `docs/{이슈번호}/{JIRA 이슈 키}`     | 문서 작업 브랜치          |
+| `hotfix/{이슈번호}/{JIRA 이슈 키}`   | 운영 중 긴급 수정 브랜치     |
+
+#### 📌 브랜치 네이밍 예시
+
+```bash
+feat/#1/SCRUM-30
+fix/#2/SCRUM-41
+refactor/#3/SCRUM-56
+docs/#4/SCRUM-18
+hotfix/#5/SCRUM-90
+```
+
+---
+
+### ✅ 커밋 컨벤션
+
+모든 커밋 메시지는 아래 형식을 따릅니다:
+
+```
+{Commit Type}: {의미 있는 메시지} ({깃헙 이슈 번호}, {JIRA 이슈 키})
+- 상세 설명 (선택 사항)
+```
+
+#### 📌 커밋 예시
+
+```bash
+feat: 로그인 기능 구현 (#1, SCRUM-30)
+- Spring Security 설정 추가
+- JWT 발급 로직 구현
+```
+
+| 타입         | 설명            |
+| ---------- | ------------- |
+| `feat`     | 새로운 기능 추가     |
+| `fix`      | 버그 수정         |
+| `refactor` | 코드 개선 및 리팩토링  |
+| `docs`     | 문서 작성/수정      |
+| `test`     | 테스트 코드 작성     |
+| `chore`    | 빌드/설정 등 기타 작업 |
+
+---
+
+> 🔒 모든 PR은 리뷰어 지정 및 CI 테스트 통과 후 병합합니다.
+
+<br/>
+</details>
+
+<details>
+  <summary><b>[ 🔄 CI/CD ]</b> </summary>
+
+## 🔄 CI/CD
+
+### CI/CD 워크플로우
+<img width="100%" src="https://github.com/user-attachments/assets/49cabdf4-b133-4dff-9792-d8915dea4d1a" alt="CI/CD 워크플로우"/>
+
+SSOK의 CI/CD는 **Jenkins + Docker + ArgoCD** 기반으로 운영되며, `develop` 브랜치의 변경 사항이 실시간 배포까지 자동화됩니다.
+
+    1. 해당 저장소의 develop 브랜치에 변경사항 발생 (push/merge)
+    2. Jenkins가 발생한 트리거를 확인하고 해당하는 서비스의 빌드 수행
+    3. 빌드된 이미지는 Docker 이미지로 패키징되어 Docker Hub에 업로드
+    4. 빌드후 Jenkins에서 Github ssok-deploy 저장소에 최신 이미지 버전으로 업데이트 및 자동 커밋
+    5. ArgoCD가 변경을 감지하고 자동으로 해당 서비스 배포
+    (ssok-deploy 저장소의 해당 서비스 HelmChart 렌더링 후 kustomization values.yaml 파일 오버라이드)
+
+### Jenkins 파이프라인(CI)
+develop 브랜치에 push 또는 merge가 발생하면 Jenkins CI/CD 파이프라인이 자동으로 실행됩니다.
+
+```groovy
+// Jenkinsfile 주요 단계
+pipeline {
+    stages {
+        stage('Build') { ... }
+        stage('Test') { ... }
+        stage('Docker Build') { ... }
+        stage('Deploy') { ... }
+    }
+}
+```
+
+**특징**
+- **변경 감지**: 변경된 서비스만 빌드 및 배포
+- **병렬 처리**: 독립적인 서비스 동시 빌드
+- **롤백 지원**: 배포 실패 시 이전 버전으로 자동 롤백
+
+### Kubernetes 배포 전략(CD)
+- **Rolling Update**: Kubernetes의 `rollingUpdate` 전략을 통해 하나씩 Pod을 교체하며 배포합니다.
+- **Readiness Probe 기반 트래픽 제어**: `readinessProbe`를 통해 준비되지 않은 Pod에는 트래픽이 전달되지 않도록 하여, 무중단 배포를 보장합니다.
+- **Liveness Probe**: 장애가 발생한 Pod을 자동으로 재시작하여 안정성을 유지합니다.
+
+<br/>
+</details>
+
+<details>
+  <summary><b>[ 🔍 모니터링 & 로깅 ]</b> </summary>
+
+## 🔍 모니터링 & 로깅
+
+### 메트릭 수집 (Monitoring)
+
+<img width="100%" src="https://github.com/user-attachments/assets/8a0a4208-66bf-4487-ba78-2c85d5e1a224" alt="매트릭 수집"/>
+
+> 애플리케이션 및 인프라의 상태를 실시간 관측하여 이상 상황을 조기에 감지
+
+* **Prometheus**: EKS 클러스터 노드 및 마이크로서비스의 메트릭 수집
+* **Micrometer**: Spring Boot 기반의 서비스 메트릭 노출
+* **Grafana**: 대시보드를 통해 시각화 및 실시간 모니터링
+* **Alert Manager**: 설정한 알림 조건에 따라 이벤트 발생 시 Webhook을 통해 SSOM에 알림 전송
+
+### 로그 수집 (Logging)
+
+<img width="100%" src="https://github.com/user-attachments/assets/5b6f9ec5-e3a1-452d-9ff9-770045d6cd8a" alt="로그 수집"/>
+
+> 서비스 오류나 예외 발생 시, 빠르게 로그를 수집하고 대응할 수 있도록 구성
+
+* **Slf4j + Logback**: logback-spring.xml 기반 애플리케이션 로그 출력
+* **Fluent Bit (Sidecar)**: 각 마이크로서비스 파드에 사이드카 형태로 구성되어 로그를 수집
+* **Fluentd**: Fluent Bit에서 전달받은 로그를 OpenSearch에 적재
+* **OpenSearch**: 수집된 로그를 저장 및 검색 가능
+* **OpenSearch Dashboards**: 사용자 정의 대시보드를 통해 에러 로그 필터링 및 시각화
+* **OpenSearch Alert Monitor**: 조건부 탐지 기반으로 이상 로그 발생 시 Webhook을 통해 SSOM에 알림 전송
+* **OpenSearch Anomaly Detection**: OpenSearch Anomaly Detection 기능을 통해서 에러 발생률 & 송금 요청률 이상 탐지 후 Slack에 알림 전송
+<img width="50%" src="https://github.com/user-attachments/assets/7e1fe4dd-f81d-439f-a689-17c34bb54258" alt="이상 탐지"/>
+
+<br/>
+</details>
+
+<details>
+  <summary><b>[ 🚀 빠른 시작 ]</b> </summary>
 
 ## 🚀 빠른 시작
 
@@ -183,167 +329,31 @@ docker build -f ssok-account-service/Dockerfile -t ssok-account-service:latest .
 docker run -p 8080:8080 ssok-account-service:latest
 ```
 
-## 📊 API 문서
-
-### Swagger UI
-각 서비스는 개발 환경에서 Swagger UI를 제공합니다:
-
-- **Gateway**: http://localhost:8080/swagger-ui.html
-- **User Service**: http://localhost:8081/swagger-ui.html
-- **Account Service**: http://localhost:8082/swagger-ui.html
-- **Transfer Service**: http://localhost:8083/swagger-ui.html
-- **Bluetooth Service**: http://localhost:8084/swagger-ui.html
-- **Notification Service**: http://localhost:8085/swagger-ui.html
-
-### 주요 API 엔드포인트
-
-```bash
-# 사용자 인증
-POST /api/users/login
-
-# 계좌 목록 조회
-GET /api/accounts
-
-# 송금 실행
-POST /api/transfers
-
-# 블루투스 매칭
-POST /api/bluetooth/match
-
-# 거래 내역 조회
-GET /api/transfers/history
-```
-
-## 🔧 환경 설정
-
-### 환경별 프로파일
-```yaml
-# application.yml
-spring:
-  profiles:
-    active: ${SPRING_PROFILES_ACTIVE:local}
-
----
-# Local 환경
-spring:
-  config:
-    activate:
-      on-profile: local
-  datasource:
-    url: jdbc:postgresql://localhost:5432/ssok_db
-
----
-# Development 환경
-spring:
-  config:
-    activate:
-      on-profile: dev
-  datasource:
-    url: jdbc:postgresql://dev-db:5432/ssok_db
-
----
-# Production 환경
-spring:
-  config:
-    activate:
-      on-profile: prod
-  datasource:
-    url: jdbc:postgresql://prod-db:5432/ssok_db
-```
-
-### 환경 변수
+### 5. 환경 변수
 주요 환경 변수는 각 서비스의 README 문서에서 확인할 수 있습니다.
 
-## 🔄 CI/CD
+<br/>
+</details>
 
-### Jenkins 파이프라인
-develop 브랜치에 push 또는 merge가 발생하면 Jenkins CI/CD 파이프라인이 자동으로 실행됩니다.
-
-```groovy
-// Jenkinsfile 주요 단계
-pipeline {
-    stages {
-        stage('Build') { ... }
-        stage('Test') { ... }
-        stage('Docker Build') { ... }
-        stage('Deploy') { ... }
-    }
-}
-```
-
-**특징:**
-- **변경 감지**: 변경된 서비스만 빌드 및 배포
-- **병렬 처리**: 독립적인 서비스 동시 빌드
-- **롤백 지원**: 배포 실패 시 이전 버전으로 자동 롤백
-
-### 배포 전략
-- **Blue-Green 배포**: 무중단 배포
-- **Canary 배포**: 점진적 트래픽 전환
-- **롤링 업데이트**: Kubernetes 기반 점진적 업데이트
-
-## 🔍 모니터링
-
-### Health Check
-```bash
-# 전체 서비스 상태 확인
-curl http://localhost:8080/actuator/health
-
-# 개별 서비스 상태 확인
-curl http://localhost:8081/actuator/health  # User Service
-curl http://localhost:8082/actuator/health  # Account Service
-```
-
-### 메트릭 수집
-- **Prometheus**: 메트릭 수집 및 저장
-- **Grafana**: 메트릭 시각화 및 대시보드
-- **Micrometer**: 애플리케이션 메트릭 생성
-
-## 🧪 테스트
-
-### 전체 테스트 실행
-```bash
-# 모든 서비스 테스트
-./gradlew test
-
-# 특정 서비스 테스트
-./gradlew :ssok-user-service:test
-
-# 통합 테스트
-./gradlew integrationTest
-```
-
-### 테스트 커버리지
-```bash
-# 커버리지 리포트 생성
-./gradlew jacocoTestReport
-
-# 커버리지 확인
-open build/reports/jacoco/test/html/index.html
-```
-
-## 🔐 보안
-
-### 인증/인가
-- **JWT Token**: Stateless 인증
-- **PIN Code**: 추가 보안 계층
-- **CORS**: Gateway에서 정책 관리
-
-### 데이터 보호
-- **개인정보 마스킹**: 이름, 전화번호 등
-- **암호화**: 민감 정보 암호화 저장
-- **HTTPS**: 전송 구간 암호화
+<details>
+  <summary><b>[ 📚 참고 자료 ]</b> </summary>
 
 ## 📚 참고 자료
 
 ### 관련 저장소
-- **[ssok-deploy](https://github.com/Team-SSOK/ssok-deploy)**: Kubernetes 배포 설정
+- **[ssok-deploy](https://github.com/Team-SSOK/ssok-deploy)**: Jenkins, Kubernetes, Helm 설정
 - **[ssok-openbanking](https://github.com/Team-SSOK/ssok-openbanking)**: 외부 금융기관 시뮬레이터
 - **[ssok-frontend](https://github.com/Team-SSOK/ssok-frontend)**: 모바일 애플리케이션
 
 ### 문서
 - **API 명세서**: 각 서비스별 README 참조
 - **배포 가이드**: ssok-deploy 저장소 참조
-- **아키텍처 문서**: 프로젝트 Wiki 참조
+
+<br/>
+</details>
+
+<details>
+  <summary><b>[ 🤝 기여하기 ]</b> </summary>
 
 ## 🤝 기여하기
 
@@ -359,12 +369,7 @@ open build/reports/jacoco/test/html/index.html
 - **테스트**: 새로운 기능에 대한 테스트 코드 필수
 - **문서**: API 변경 시 README 업데이트 필수
 
-## 📞 문의
-
-- **팀**: SSOK Backend Team
-- **이슈 등록**: [GitHub Issues](https://github.com/Team-SSOK/ssok-backend/issues)
-- **프로젝트 위키**: [GitHub Wiki](https://github.com/Team-SSOK/ssok-backend/wiki)
-- **이메일**: ssok-backend@example.com
+</details>
 
 ---
 
