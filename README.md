@@ -201,13 +201,19 @@ ssok-backend/
 </details>
 
 <details>
-  <summary><b>[ 🔀 Git Flow & 협업 가이드라인 ]</b> </summary>
+      <summary><b>[ 🔀 협업 방식 ]</b> </summary>
 
-## 🔀 Git Flow & 협업 가이드라인
+## 🔀 협업 방식
 
-SSOK 프로젝트는 **Git Flow 전략**을 기반으로 브랜치를 관리하며, 일관된 커밋 컨벤션과 PR 리뷰를 통해 협업 효율을 높입니다.
+<img width="100%" src="https://github.com/user-attachments/assets/0c1e4a93-27a8-45ed-9818-861d5693f8d9" alt="협업 방식"/>
 
-### 🧵 브랜치 전략
+SSOK 팀은 프로젝트 시작 시, 원할한 협업과 소통을 위해 가장 먼저 **그라운드 룰**을 설정했습니다.
+
+그리고 **Slack**과 **Jira**, **Notion**을 통해 실시간으로 소통하고 작업을 관리하고자 했습니다.
+
+SSOK 프로젝트는 **Git Flow 전략**을 기반으로 브랜치를 관리하며, 일관된 커밋 컨벤션과 PR 리뷰를 통해 협업 효율을 높였습니다.
+
+### 🧵 Git Flow 전략
 
 모든 브랜치는 `develop` 브랜치에서 파생되며, 기능 및 목적에 따라 다음과 같은 네이밍 규칙을 따릅니다:
 
