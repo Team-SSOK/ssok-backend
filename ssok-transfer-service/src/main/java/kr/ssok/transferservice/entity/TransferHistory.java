@@ -18,6 +18,18 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED) // JPA용 생성자 제한
 @AllArgsConstructor // @Builder 사용을 위해 필요
+@Table(
+        name = "transfer_history",
+        indexes = {
+                // ① createdAt 단일 인덱스 (최근 N건 조회 최적화) => 최근 송금 내역 조회
+                @Index(name = "idx_createdat", columnList = "created_at"),
+                // ② 커버링 인덱스: 필터·정렬·그룹핑 최적화
+                @Index(
+                        name = "idx_full_covering",
+                        columnList = "account_id, transfer_type, transfer_method, created_at DESC, counterpart_account, counterpart_name, counterpart_bank_code"
+                )
+        }
+)
 public class TransferHistory {
 
     @Id

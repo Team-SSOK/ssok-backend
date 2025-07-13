@@ -78,6 +78,8 @@ public class TransferHistoryServiceImpl implements TransferHistoryService {
             throw new TransferException(TransferResponseStatus.INVALID_USER_ID);
         }
 
+        // 테스트용
+        // List<Long> accountIds = List.of(1L, 2L);
         List<Long> accountIds = getAccountIdsByUserId(userId);
         if (accountIds.isEmpty()) {
             log.warn("[SSOK-TRANSFER] 사용자 ID {}에 해당하는 계좌가 없습니다.", userId);
@@ -99,6 +101,8 @@ public class TransferHistoryServiceImpl implements TransferHistoryService {
             throw new TransferException(TransferResponseStatus.INVALID_USER_ID);
         }
 
+        // 테스트용
+        // List<Long> accountIds = List.of(1L, 2L);
         List<Long> accountIds = getAccountIdsByUserId(userId);
         if (accountIds.isEmpty()) {
             log.warn("[SSOK-TRANSFER-HISTORY] 사용자 ID {}의 계좌가 존재하지 않아 최근 송금 이력을 조회할 수 없습니다.", userId);
