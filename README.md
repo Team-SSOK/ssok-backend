@@ -13,14 +13,14 @@
 <details>
   <summary><b>[ 📋 개요 ]</b> </summary>
 
-## 📋 개요
+## 개요
 
 > 블루투스 기반 송금 기능을 제공하는 금융 서비스 **SSOK**의 백엔드 저장소입니다.
 
 **SSOK**은 마이크로서비스 아키텍처(MSA)로 설계된 현대적인 금융 서비스 플랫폼으로,  
 핀번호 기반 인증과 블루투스를 활용한 혁신적인 근거리 송금 서비스를 제공합니다.
 
-### 🎯 핵심 기능
+### 핵심 기능
 - **핀번호 기반 인증**: 간편하고 안전한 사용자 인증/인가
 - **블루투스 근거리 송금**: 주변 사용자와의 직관적인 송금 서비스
 - **실시간 알림**: FCM 푸시 알림 및 SMS 발송
@@ -33,7 +33,7 @@
 <details>
   <summary><b>[ ⭐ 서비스 기능 ]</b> </summary>
 
-## ⭐ 서비스 기능
+## 서비스 기능
 
 ### [SSOK 회원 가입 및 PIN 번호 설정]
 
@@ -97,7 +97,7 @@
 <details>
   <summary><b>[ 🏗️ 아키텍처 ]</b> </summary>
 
-## 🏗️ 아키텍처
+## 아키텍처
 
 SSOK은 **마이크로서비스 아키텍처**로 설계되어 각 도메인별로 독립적인 서비스로 구성되어 있습니다.
 
@@ -113,7 +113,7 @@ SSOK은 **마이크로서비스 아키텍처**로 설계되어 각 도메인별�
 <details>
   <summary><b>[ 🛠️ 기술 스택 ]</b> </summary>
 
-## 🛠️ 기술 스택
+## 기술 스택
 
 <img width="100%" src="https://github.com/user-attachments/assets/29fb48cb-36f0-4074-aaf5-f2c5275c44c5" alt="기술 스택"/>
 
@@ -153,11 +153,11 @@ SSOK은 **마이크로서비스 아키텍처**로 설계되어 각 도메인별�
 </details>
 
 <details>
-  <summary><b>[ 🔗 프로젝트 구조 & 서비스별 상세 문서 ]</b> </summary>
+  <summary><b>[ 📂 프로젝트 구조 & 서비스별 상세 문서 ]</b> </summary>
 
-## 🔗 프로젝트 구조 & 서비스별 상세 문서
+## 프로젝트 구조 & 서비스별 상세 문서
 
-### 📂 프로젝트 구조
+### 프로젝트 구조
 
 ```
 ssok-backend/
@@ -178,7 +178,7 @@ ssok-backend/
 
 각 마이크로서비스의 상세한 명세, 설정 방법, 실행 가이드는 개별 README 문서를 참고하세요.
 
-### 📊 Core Services
+### Core Services
 | 서비스 | 설명 | 문서 링크 |
 |--------|------|-----------|
 | **Gateway Service** | API 라우팅, 인증 필터, CORS 처리 | [📖 상세 문서](./ssok-gateway-service/ssok_gateway_service_readme.md) |
@@ -192,7 +192,7 @@ ssok-backend/
 | **Bluetooth Service** | 블루투스 매칭, 근거리 송금 | [📖 상세 문서](./ssok-bluetooth-service/ssok_bluetooth_service_readme.md) |
 | **Notification Service** | FCM 푸시 알림, SMS 발송 | [📖 상세 문서](./ssok-notification-service/ssok_notification_service_readme.md) |
 
-### 📚 Common Libraries
+### Common Libraries
 | 모듈 | 설명 | 문서 링크 |
 |------|------|-----------|
 | **Common** | 공통 예외, 응답, 유틸리티, gRPC Proto | [📖 상세 문서](./ssok-common/ssok_common_readme.md) |
@@ -203,7 +203,7 @@ ssok-backend/
 <details>
       <summary><b>[ 🔀 협업 방식 ]</b> </summary>
 
-## 🔀 협업 방식
+## 협업 방식
 
 <img width="100%" src="https://github.com/user-attachments/assets/0c1e4a93-27a8-45ed-9818-861d5693f8d9" alt="협업 방식"/>
 
@@ -213,7 +213,7 @@ SSOK 팀은 프로젝트 시작 시, 원할한 협업과 소통을 위해 가장
 
 SSOK 프로젝트는 **Git Flow 전략**을 기반으로 브랜치를 관리하며, 일관된 커밋 컨벤션과 PR 리뷰를 통해 협업 효율을 높였습니다.
 
-### 🧵 Git Flow 전략
+### Git Flow 전략
 
 모든 브랜치는 `develop` 브랜치에서 파생되며, 기능 및 목적에 따라 다음과 같은 네이밍 규칙을 따릅니다:
 
@@ -227,7 +227,7 @@ SSOK 프로젝트는 **Git Flow 전략**을 기반으로 브랜치를 관리하�
 | `docs/{이슈번호}/{JIRA 이슈 키}`     | 문서 작업 브랜치          |
 | `hotfix/{이슈번호}/{JIRA 이슈 키}`   | 운영 중 긴급 수정 브랜치     |
 
-#### 📌 브랜치 네이밍 예시
+#### 브랜치 네이밍 예시
 
 ```bash
 feat/#1/SCRUM-30
@@ -239,7 +239,7 @@ hotfix/#5/SCRUM-90
 
 ---
 
-### ✅ 커밋 컨벤션
+### 커밋 컨벤션
 
 모든 커밋 메시지는 아래 형식을 따릅니다:
 
@@ -248,7 +248,7 @@ hotfix/#5/SCRUM-90
 - 상세 설명 (선택 사항)
 ```
 
-#### 📌 커밋 예시
+#### 커밋 예시
 
 ```bash
 feat: 로그인 기능 구현 (#1, SCRUM-30)
@@ -267,7 +267,7 @@ feat: 로그인 기능 구현 (#1, SCRUM-30)
 
 ---
 
-> 🔒 모든 PR은 리뷰어 지정 및 CI 테스트 통과 후 병합합니다.
+> 모든 PR은 리뷰어 지정 및 CI 테스트 통과 후 병합합니다.
 
 <br/>
 </details>
@@ -275,7 +275,7 @@ feat: 로그인 기능 구현 (#1, SCRUM-30)
 <details>
   <summary><b>[ 🔄 CI/CD ]</b> </summary>
 
-## 🔄 CI/CD
+## CI/CD
 
 ### CI/CD 워크플로우
 <img width="100%" src="https://github.com/user-attachments/assets/49cabdf4-b133-4dff-9792-d8915dea4d1a" alt="CI/CD 워크플로우"/>
@@ -320,7 +320,7 @@ pipeline {
 <details>
   <summary><b>[ 🔍 모니터링 & 로깅 ]</b> </summary>
 
-## 🔍 모니터링 & 로깅
+## 모니터링 & 로깅
 
 ### 메트릭 수집 (Monitoring)
 
@@ -346,7 +346,7 @@ pipeline {
 * **OpenSearch Dashboards**: 사용자 정의 대시보드를 통해 에러 로그 필터링 및 시각화
 * **OpenSearch Alert Monitor**: 조건부 탐지 기반으로 이상 로그 발생 시 Webhook을 통해 SSOM에 알림 전송
 * **OpenSearch Anomaly Detection**: OpenSearch Anomaly Detection 기능을 통해서 에러 발생률 & 송금 요청률 이상 탐지 후 Slack에 알림 전송
-<img width="50%" src="https://github.com/user-attachments/assets/7e1fe4dd-f81d-439f-a689-17c34bb54258" alt="이상 탐지"/>
+<img width="80%" src="https://github.com/user-attachments/assets/7e1fe4dd-f81d-439f-a689-17c34bb54258" alt="이상 탐지"/>
 
 <br/>
 </details>
@@ -354,7 +354,7 @@ pipeline {
 <details>
   <summary><b>[ 🚀 빠른 시작 ]</b> </summary>
 
-## 🚀 빠른 시작
+## 빠른 시작
 
 ### 1. 사전 요구사항
 - **Java 17** 이상
@@ -410,7 +410,7 @@ docker run -p 8080:8080 ssok-account-service:latest
 <details>
   <summary><b>[ 📚 참고 자료 ]</b> </summary>
 
-## 📚 참고 자료
+## 참고 자료
 
 ### 관련 저장소
 - **[ssok-deploy](https://github.com/Team-SSOK/ssok-deploy)**: Jenkins, Kubernetes, Helm 설정
@@ -427,7 +427,7 @@ docker run -p 8080:8080 ssok-account-service:latest
 <details>
   <summary><b>[ 🤝 기여하기 ]</b> </summary>
 
-## 🤝 기여하기
+## 기여하기
 
 1. **Fork** 저장소
 2. **Feature Branch** 생성 (`git checkout -b feature/amazing-feature`)
