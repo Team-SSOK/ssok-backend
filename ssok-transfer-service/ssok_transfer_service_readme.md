@@ -3,7 +3,7 @@
 > 송금 처리 및 거래 내역 관리를 담당하는 마이크로서비스
 
 <details>
-  <summary><b>[ 📋 개요 ]</b> </summary>
+  <summary><b>[ 개요 ]</b> </summary>
 
 ## 📋 개요
 
@@ -21,7 +21,7 @@ SSOK Transfer Service는 SSOK 플랫폼의 **송금 처리 및 거래 내역 관
 </details>
 
 <details>
-  <summary><b>[ 🏗️ 아키텍처 ]</b> </summary>
+  <summary><b>[ 아키텍처 ]</b> </summary>
 
 ## 🏗️ 주요 아키텍처
 
@@ -31,7 +31,7 @@ SSOK Transfer Service는 SSOK 플랫폼의 **송금 처리 및 거래 내역 관
 </details>
 
 <details>
-  <summary><b>[ 🔧 기술 스택 ]</b> </summary>
+  <summary><b>[ 기술 스택 ]</b> </summary>
 
 ## 🔧 기술 스택
 
@@ -52,7 +52,7 @@ SSOK Transfer Service는 SSOK 플랫폼의 **송금 처리 및 거래 내역 관
 </details>
 
 <details>
-  <summary><b>[ 📁 프로젝트 구조 ]</b> </summary>
+  <summary><b>[ 프로젝트 구조 ]</b> </summary>
 
 ## 📁 프로젝트 구조
 
@@ -129,7 +129,7 @@ ssok-transfer-service/
 </details>
 
 <details>
-  <summary><b>[ 🗄️ 데이터베이스 스키마 ]</b> </summary>
+  <summary><b>[ 데이터베이스 스키마 ]</b> </summary>
 
 ## 🗄️ 데이터베이스 스키마
 
@@ -175,30 +175,7 @@ public enum CurrencyCode {
 </details>
 
 <details>
-  <summary><b>[ 🔌 API 엔드포인트 ]</b> </summary>
-
-## 🔌 API 엔드포인트
-
-### 송금 처리 (`/api/transfers/openbank`)
-
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| POST | `/` | 일반 송금 | ✅ |
-| POST | `/bluetooth` | 블루투스 송금 | ✅ |
-
-### 거래 내역 (`/api/transfers`)
-
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| GET | `/histories?accountId={id}` | 특정 계좌 거래 내역 (3개월) | ✅ |
-| GET | `/counterparts` | 최근 송금 상대 목록 | ✅ |
-| GET | `/history` | 최근 송금 이력 3건 | ✅ |
-
-<br/>
-</details>
-
-<details>
-  <summary><b>[ 💼 주요 비즈니스 로직 ]</b> </summary>
+  <summary><b>[ 주요 비즈니스 로직 ]</b> </summary>
 
 ## 💼 주요 비즈니스 로직
 
@@ -256,7 +233,7 @@ sequenceDiagram
 </details>
 
 <details>
-  <summary><b>[ ⚡ 비동기 처리 및 성능 최적화 ]</b> </summary>
+  <summary><b>[ 비동기 처리 및 성능 최적화 ]</b> </summary>
 
 ## ⚡ 비동기 처리 및 성능 최적화
 
@@ -453,7 +430,7 @@ public class WebClientConfig {
 </details>
 
 <details>
-  <summary><b>[ 📡 Kafka 메시징 ]</b> </summary>
+  <summary><b>[ Kafka 메시징 ]</b> </summary>
 
 ## 📡 Kafka 메시징
 
@@ -468,7 +445,7 @@ SSOK 시스템의 송금 과정에서 사용자가 즉각적인 송금 응답을
 * 사용자에게는 **즉시 송금 결과 응답**이 전송되고, 알림은 나중에 도착해도 무관하므로 사용자 경험이 개선됨
 * Kafka 도입으로 시스템은 **더 높은 처리량과 확장성**, **서비스 간 결합도 감소**, **오류 발생 시 재처리 및 장애 격리 가능** 이점 확보
 
-> 🔧 참고: 아래 다이어그램은 송금 요청과 알림 전송을 Kafka로 분리하여 Latency를 줄이고, 각 서비스의 책임을 분리한 구조입니다.
+> 참고: 아래 다이어그램은 송금 요청과 알림 전송을 Kafka로 분리하여 Latency를 줄이고, 각 서비스의 책임을 분리한 구조입니다.
 
 #### 기존 로직
 <img width="70%" src="https://github.com/user-attachments/assets/fa81b64f-c833-4efc-9a38-e5e513552f50" alt="기존 로직"/>
@@ -534,7 +511,7 @@ public class KafkaProducerConfig {
 </details>
 
 <details>
-  <summary><b>[ 🚀 빌드 및 실행 ]</b> </summary>
+  <summary><b>[ 빌드 및 실행 ]</b> </summary>
 
 ## 🚀 빌드 및 실행
 
@@ -622,7 +599,7 @@ public class KafkaProducerConfig {
 </details>
 
 <details>
-  <summary><b>[ 🧪 테스트 ]</b> </summary>
+  <summary><b>[ 테스트 ]</b> </summary>
 
 ## 🧪 테스트
 
@@ -672,10 +649,10 @@ curl -X POST http://localhost:8080/api/transfers/openbank/bluetooth \
 
 <br/>
 
-#### 📞 문의
+#### 문의
 
 Transfer Service 관련 문의사항이 있으시면 이슈를 등록해주세요.
 
 ---
 
-> **Note**: 이 서비스는 금융 거래를 처리하는 핵심 서비스입니다. 모든 변경사항은 충분한 테스트를 거친 후 적용해야 하며, 장애 발생 시 즉시 대응할 수 있는 모니터링 체계를 갖추고 있습니다. 다른 서비스들과의 연동 정보는 [메인 README](../README.md)를 참조하세요.
+> **Note**: 이 서비스는 금융 거래를 처리하는 핵심 서비스입니다. 다른 서비스들과의 연동 정보는 [메인 README](../README.md)를 참조하세요.
